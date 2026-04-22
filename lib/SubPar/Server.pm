@@ -61,6 +61,15 @@ sub to_psgi {
 
         if(defined $self->{routes}{$path}{$method}) {
             my $response = $self->{routes}{$path}{$method}($body);
+
+            if(ref $response ne "SubPar::Response") {
+                $response = SubPar::Response->new(
+                    SubPar::Response::HTTP_200(),
+                    SubPar::ContentType::CT_JSON(),
+                    $response
+                );
+            }
+
             return $response->to_psgi;
         }
 
