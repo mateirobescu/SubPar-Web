@@ -13,6 +13,7 @@ use constant CT_FORM => 'application/x-www-form-urlencoded';
 
 sub encode {
     my ($content_type, $data) = @_;
+    
     if ($content_type eq CT_JSON) {
         return encode_json($data);
     }
@@ -30,7 +31,7 @@ sub encode {
     }
 
 
-    return Dumper $data;
+    return $data;
 }
 
 sub decode {
