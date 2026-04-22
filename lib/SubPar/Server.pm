@@ -7,8 +7,8 @@ use JSON::PP;
 use Data::Dumper;
 use DBI;
 
-use ContentType;
-use Response;
+use SubPar::ContentType;
+use SubPar::Response;
 
 sub new {
     my ($class, $self) = @_;
@@ -20,34 +20,6 @@ sub register_method {
     my ($self, $method, $path, $sub) = @_;
 
     $self->{routes}{$path}{$method} = $sub;
-}
-
-sub send_response {
-    my ($self, $client, $body, $content_type) = @_;
-
-    my $response;
-    if($content_type eq "application/json") {
-        $response = encode_json($body);
-    }
-
-    print $client "HTTP/1.1 200 OK\r\n";
-    print $client "Content-Type: $content_type\r\n";
-    print $client "Content-Length: " . length($response) . "\r\n";
-    print $client "\r\n";
-    print $client $response;
-}
-
-sub read_body {
-    my ($self, $client, $request) = @_;
-
-    my ($content_type) = $request =~ /Content-Type:\s+([a-zA-Z\/]+)/;
-    my ($length) = $request =~ /Content-Length:\s+([0-9]+)/;
-    my $body = '';
-    read($client, $body, $length) if $length;
-
-    $body = ContentType::decode($content_type, $body);
-
-    return $body;
 }
 
 sub register_db {
@@ -84,7 +56,7 @@ sub to_psgi {
         my $body = '';
         if($env->{CONTENT_LENGTH}) {
             $env->{"psgi.input"}->read($body, $env->{CONTENT_LENGTH});
-            $body = ContentType::decode($env->{CONTENT_TYPE}, $body);
+            $body = SubPar::ContentType::decode($env->{CONTENT_TYPE}, $body);
         }
 
         if(defined $self->{routes}{$path}{$method}) {
@@ -92,7 +64,7 @@ sub to_psgi {
             return $response->to_psgi;
         }
 
-        return Response->new(Response::HTTP_404, ContentType::CT_JSON, { error => "not found"})->to_psgi;
+        return SubPar::Response->new(SubPar::Response::HTTP_404(), SubPar::ContentType::CT_JSON(), { error => "not found"})->to_psgi;
 
     }
 }
