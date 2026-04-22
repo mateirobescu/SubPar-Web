@@ -1,0 +1,33 @@
+# Build artifacts
+blib/
+Makefile
+MYMETA.*
+pm_to_blib
+*.tar.gz
+*.bak
+
+# Temp files
+tempCodeRunnerFile.*
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Perl
+*.pbc
+*.pmc
+cover_db/
+nytprof/
+nytprof.out
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local config
+.env
+*.local
