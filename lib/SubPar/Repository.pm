@@ -15,7 +15,7 @@ sub save {
     my $model_fields = $model->get_hashref();
 
     my @field_names = keys %$model_fields;
-    my @field_values = values %$model_fields;
+    my @field_values = @$model_fields{@field_names};
     my $field_names_str = join ", ", @field_names;
 
     my $nr_of_fields = @field_names;
