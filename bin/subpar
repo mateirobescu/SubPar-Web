@@ -1,0 +1,151 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+use Getopt::Long;
+
+my $command = shift @ARGV;
+my $arg = shift @ARGV;
+
+if($command eq 'create-project') {
+    create_project();
+}
+elsif($command eq 'runserver') {
+    runserver($arg);
+} 
+else {
+    print "$command is not a valid command!\n";
+}
+
+
+sub create_project  {
+    mkdir "app" or die "Cannot create directory: $!";
+    print "  created app/\n";
+    mkdir "app/Controller" or die "Cannot create directory: $!";
+    print "  created app/Controller/\n";
+    mkdir "app/Repository" or die "Cannot create directory: $!";
+    print "  created app/Repository/\n";
+    mkdir "app/Model" or die "Cannot create directory: $!";
+    print "  created app/Model/\n";
+
+
+    my $fh;
+    open $fh, ">", "app.psgi" or die "Cannot create file: $!";
+    print "  created app.psgi\n";
+
+    print $fh <<END;
+use strict;
+use warnings;
+
+use FindBin;
+use lib "\$FindBin::Bin/app";
+use SubPar::Server;
+use Controller::ExampleController;
+
+my \$server = SubPar::Server->new();
+
+# Register databases here.
+# \$server->register_db("main", {
+#     driver => "MariaDB",
+#     database_name => "subpar",
+#     hostname => "localhost",
+#     port => "3306",
+#     username => "admin",
+#     password => "password",
+# })
+
+# Register controllers here.
+Controller::ExampleController->register(\$server);
+
+my \$app = \$server->to_psgi;
+
+END
+
+    close $fh;
+
+    open $fh, '>', 'app/Controller/ExampleController.pm' or die "Cannot create file: $!";;
+    print "  created app/Controller/ExampleController.pm\n";
+
+print $fh <<END;
+package Controller::ExampleController;
+
+use strict;
+use warnings;
+
+use parent 'SubPar::Controller';
+
+# Inject your repositories here.
+sub repositories {
+    my (\$self) = \@_;
+    # \$self->{repositories}{Example} = Repository::ExampleRepository->new(\$self->{server}->get_db("main"));
+}
+
+# Setup your routes here.
+sub routes {
+    my (\$self) = \@_;
+
+    \$self->get("/", \\&index);
+}
+
+sub index {
+    my (\$self) = \@_;
+    return { message => "Welcome to SubPar!" };
+}
+
+1;
+
+END
+    close $fh;
+
+    open $fh, '>', "app/Model/Example.pm" or die "Cannot create file: $!";
+    print "  created app/Model/Example.pm\n";
+
+    print $fh <<END;
+package Model::Example;
+
+use strict;
+use warnings;
+
+use parent 'SubPar::Model';
+
+# Declare model fields here. Must match physical database column names.
+sub fields {
+    return {
+        id   => { pk => 1, auto => 1, required => 1 },
+        name => { required => 1 },
+    };
+}
+
+1;
+END
+    close $fh;
+
+    open $fh, '>', "app/Repository/ExampleRepository.pm" or die "Cannot create file: $!";    print "  created app/Repository/ExampleRepository.pm\n";
+
+    print $fh <<END;
+package Repository::ExampleRepository;
+
+use strict;
+use warnings;
+
+use parent 'SubPar::Repository';
+
+# Declare table name here. Must match physical database table name.
+sub table { 'example' }
+
+1;
+END
+    close $fh;
+
+    print "\nDone! Get started:\n";
+    print "  subpar runserver\n";
+
+}
+
+sub runserver  {
+    my ($port) = @_;
+    $port //= 8080;
+    print "Starting SubPar server on port $port...\n";
+    print "Press Ctrl+C to stop.\n\n";
+    exec "starman --port $port app.psgi";
+}

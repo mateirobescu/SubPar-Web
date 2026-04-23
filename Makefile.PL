@@ -8,6 +8,7 @@ WriteMakefile(
     VERSION          => '0.01',
     AUTHOR           => 'Matei-Gabriel Robescu',
     LICENSE          => 'mit',
+    EXE_FILES        => ['bin/subpar'],
     PM               => {
         'lib/SubPar/Server.pm'      => '$(INST_LIB)/SubPar/Server.pm',
         'lib/SubPar/Response.pm'    => '$(INST_LIB)/SubPar/Response.pm',

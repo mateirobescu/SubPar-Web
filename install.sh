@@ -32,5 +32,5 @@ echo "Cleaning up..."
 rm -rf SubPar-Web/
 
 echo "SubPar-Web installed successfully!"
-echo "Run 'subpar new myapp' to create a new app"
+echo "Run 'subpar create-project' to create a new project"
 

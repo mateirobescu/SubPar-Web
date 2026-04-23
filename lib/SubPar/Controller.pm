@@ -8,11 +8,11 @@ sub register {
     my $self = bless { server => $server }, $class;
 
     $self->repositories();
-    $self->methods();
+    $self->routes();
     return $self;
 }
 
-sub methods {
+sub routes {
     {}
 }
 
