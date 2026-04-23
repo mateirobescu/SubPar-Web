@@ -19,5 +19,7 @@ WriteMakefile(
     PREREQ_PM        => {
         'JSON::PP'         => 0,
         'Starman'          => 0,
+        'DBI'              => 0,
+        'URI'              => 0,
     },
 );
