@@ -31,18 +31,21 @@ for dep in "${dependencies[@]}"; do
     fi
 done
 
+PERL=$(which perl)
+CPANM=$(which cpanm)
+
 echo "Cloning SubPar-Web..."
 git clone -b dev https://github.com/mateirobescu/SubPar-Web.git
 
 cd SubPar-Web/
 
 echo "Installing dependencies..."
-cpanm --notest --installdeps  .
+$CPANM --notest --installdeps  .
 
 echo "Building and installing SubPar-Web..."
-perl Makefile.PL
+$PERL Makefile.PL
 make 
-make install UNINST=1
+make install UNINST=1 PREFIX=$($PERL -e 'use Config; print $Config{prefix}')
 
 cd ..
 
@@ -73,5 +76,5 @@ else
     echo "  source ~/.bashrc"
 fi
 echo ""
-echo "Or open a new terminal, then run 'subpar create-project'"
+echo "Or open a new terminal, then run 'subpar create-project' to create a new project"
 
