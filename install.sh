@@ -52,6 +52,16 @@ echo "Cleaning up..."
 
 rm -rf SubPar-Web/
 
+if ! grep -q 'perl5/bin' ~/.bashrc 2>/dev/null; then
+    echo 'export PATH="$HOME/perl5/bin:$PATH"' >> ~/.bashrc
+fi
+
+if ! grep -q 'perl5/bin' ~/.zshrc 2>/dev/null; then
+    echo 'export PATH="$HOME/perl5/bin:$PATH"' >> ~/.zshrc
+fi
+
+export PATH="$HOME/perl5/bin:$PATH"
+
 echo "SubPar-Web installed successfully!"
 echo "Run 'subpar create-project' to create a new project"
 

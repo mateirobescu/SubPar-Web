@@ -4,7 +4,7 @@ use warnings;
 
 use Getopt::Long;
 
-my $command = shift @ARGV;
+my $command = shift @ARGV // '';
 my $arg = shift @ARGV;
 
 if($command eq 'create-project') {
@@ -37,9 +37,8 @@ sub create_project  {
 use strict;
 use warnings;
 
-use FindBin;
-use lib "\$FindBin::Bin/app";
 use SubPar::Server;
+# If your IDE cannot find modules, add ./app to your include paths.
 use Controller::ExampleController;
 
 my \$server = SubPar::Server->new();
@@ -120,7 +119,8 @@ sub fields {
 END
     close $fh;
 
-    open $fh, '>', "app/Repository/ExampleRepository.pm" or die "Cannot create file: $!";    print "  created app/Repository/ExampleRepository.pm\n";
+    open $fh, '>', "app/Repository/ExampleRepository.pm" or die "Cannot create file: $!";    
+    print "  created app/Repository/ExampleRepository.pm\n";
 
     print $fh <<END;
 package Repository::ExampleRepository;
@@ -147,5 +147,5 @@ sub runserver  {
     $port //= 8080;
     print "Starting SubPar server on port $port...\n";
     print "Press Ctrl+C to stop.\n\n";
-    exec "starman --port $port app.psgi";
+    exec "starman -I ./app --port $port app.psgi";
 }
