@@ -53,7 +53,7 @@ sub _parse_query {
     return $query_keys;
 }
 
-sub cookie {
+sub cookies {
     my ($self, $key) = @_;
 
     $self->{cookies} //= _parse_cookies($self->{env});

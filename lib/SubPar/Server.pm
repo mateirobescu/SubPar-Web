@@ -57,18 +57,18 @@ sub to_psgi {
             my $response = $handler->($request);
 
             if(ref $response ne "SubPar::Response") {
-                $response = SubPar::Response->new(
-                    SubPar::Response::HTTP_200(),
-                    SubPar::ContentType::CT_JSON(),
-                    $response
-                );
+                $response = SubPar::Response->status(200)
+                    ->content_type(SubPar::ContentType::CT_JSON())
+                    ->body($response);
             }
 
             return $response->to_psgi;
         }
 
-        return SubPar::Response->new(SubPar::Response::HTTP_404(), SubPar::ContentType::CT_JSON(), { error => "not found"})->to_psgi;
-
+        return SubPar::Response->status(404)
+                    ->content_type(SubPar::ContentType::CT_JSON())
+                    ->body({ error => "not found!"})
+                    ->to_psgi;
     };
 }
 
