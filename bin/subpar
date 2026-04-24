@@ -2,8 +2,6 @@
 use strict;
 use warnings;
 
-use Getopt::Long;
-
 my $command = shift @ARGV // '';
 my $arg = shift @ARGV;
 
@@ -14,7 +12,9 @@ elsif($command eq 'runserver') {
     runserver($arg);
 } 
 else {
-    print "$command is not a valid command!\n";
+    print "Usage: subpar <command> [args]\n";
+    print "Commands: create-project, runserver [port]\n";
+    exit 1;
 }
 
 
@@ -62,7 +62,7 @@ END
 
     close $fh;
 
-    open $fh, '>', 'app/Controller/ExampleController.pm' or die "Cannot create file: $!";;
+    open $fh, '>', 'app/Controller/ExampleController.pm' or die "Cannot create file: $!";
     print "  created app/Controller/ExampleController.pm\n";
 
 print $fh <<END;
@@ -87,7 +87,7 @@ sub routes {
 }
 
 sub index {
-    my (\$self) = \@_;
+    my (\$self, \$request) = \@_;
     return { message => "Welcome to SubPar!" };
 }
 

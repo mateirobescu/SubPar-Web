@@ -31,3 +31,5 @@ Thumbs.db
 # Local config
 .env
 *.local
+
+dev.sh

@@ -16,6 +16,7 @@ WriteMakefile(
         'lib/SubPar/Model.pm' => '$(INST_LIB)/SubPar/Model.pm',
         'lib/SubPar/Repository.pm' => '$(INST_LIB)/SubPar/Repository.pm',
         'lib/SubPar/Controller.pm' => '$(INST_LIB)/SubPar/Controller.pm',
+        'lib/SubPar/Request.pm' => '$(INST_LIB)/SubPar/Request.pm',
     },
     PREREQ_PM        => {
         'JSON::PP'         => 0,

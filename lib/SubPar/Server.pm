@@ -9,6 +9,7 @@ use DBI;
 
 use SubPar::ContentType;
 use SubPar::Response;
+use SubPar::Request;
 
 sub new {
     my ($class, $self) = @_;
@@ -16,7 +17,7 @@ sub new {
     return bless { routes => {}, dbs => {} }, $class;
 }
 
-sub register_method {
+sub _register_method {
     my ($self, $method, $path, $sub) = @_;
 
     $self->{routes}{$path}{$method} = $sub;
@@ -49,18 +50,11 @@ sub to_psgi {
 
     return sub {
         my $env = shift;
+        my $request = SubPar::Request->new($env);
 
-        my $method = $env->{REQUEST_METHOD};
-        my $path = $env->{PATH_INFO};
-
-        my $body = '';
-        if($env->{CONTENT_LENGTH}) {
-            $env->{"psgi.input"}->read($body, $env->{CONTENT_LENGTH});
-            $body = SubPar::ContentType::decode($env->{CONTENT_TYPE}, $body);
-        }
-
-        if(defined $self->{routes}{$path}{$method}) {
-            my $response = $self->{routes}{$path}{$method}($body);
+        my $handler = $self->{routes}{$request->path}{$request->method};
+        if(defined $handler) {
+            my $response = $handler->($request);
 
             if(ref $response ne "SubPar::Response") {
                 $response = SubPar::Response->new(
@@ -75,7 +69,7 @@ sub to_psgi {
 
         return SubPar::Response->new(SubPar::Response::HTTP_404(), SubPar::ContentType::CT_JSON(), { error => "not found"})->to_psgi;
 
-    }
+    };
 }
 
 1;

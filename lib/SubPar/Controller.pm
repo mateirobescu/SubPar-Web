@@ -12,44 +12,41 @@ sub register {
     return $self;
 }
 
-sub routes {
-    {}
-}
+sub routes {}
 
-sub repositories {
-    {}
+sub repositories {}
+
+sub add_route {
+    my ($self, $method, $path, $handler) = @_;
+    $self->{server}->_register_method($method, $path, sub {
+        my ($request) = @_;
+        return $self->$handler($request);
+    });
 }
 
 sub get {
     my ($self, $path, $handler) = @_;
-    $self->{server}->register_method("GET", $path, sub {
-        # handle query params
-        return $self->$handler();
-    });
+    $self->add_route("GET", $path, $handler);
 }
 
 sub post {
     my ($self, $path, $handler) = @_;
-    $self->{server}->register_method("POST", $path, sub {
-        my ($body) = @_;
-
-        return $self->$handler($body);
-    });
+    $self->add_route("POST", $path, $handler);
 }
 
 sub put {
     my ($self, $path, $handler) = @_;
-    $self->{server}->register_method("PUT", $path, $handler);
+    $self->add_route("PUT", $path, $handler);
 }
 
 sub patch {
     my ($self, $path, $handler) = @_;
-    $self->{server}->register_method("PATCH", $path, $handler);
+    $self->add_route("PATCH", $path, $handler);
 }
 
 sub del {
     my ($self, $path, $handler) = @_;
-    $self->{server}->register_method("DELETE", $path, $handler);
+    $self->add_route("DELETE", $path, $handler);
 }
 
 1;
