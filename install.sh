@@ -62,6 +62,16 @@ fi
 
 export PATH="$HOME/perl5/bin:$PATH"
 
+echo ""
 echo "SubPar-Web installed successfully!"
-echo "Run 'subpar create-project' to create a new project"
+echo ""
+echo "ACTION REQUIRED: Run the following command to activate subpar:"
+echo ""
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "  source ~/.zshrc"
+else
+    echo "  source ~/.bashrc"
+fi
+echo ""
+echo "Or open a new terminal, then run 'subpar create-project'"
 
