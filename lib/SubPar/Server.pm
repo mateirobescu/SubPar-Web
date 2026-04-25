@@ -17,10 +17,59 @@ sub new {
     return bless { routes => {}, dbs => {} }, $class;
 }
 
-sub _register_method {
+use Data::Dumper;
+
+sub _register_route {
     my ($self, $method, $path, $sub) = @_;
 
-    $self->{routes}{$path}{$method} = $sub;
+    $path =~ s/^\///;
+    $path =~ s/\/$//;
+    my @path_segments = split /\//, $path;
+
+    my $pointer = $self->{routes};
+    for my $segment (@path_segments) {
+        if(substr($segment, 0, 1) eq ":") {
+            my $param_name = substr($segment, 1);
+            die "Another similar dynamic route already exists: $method - $path" if $pointer->{"*"}{"<PARAM_NAME>"} eq $param_name;
+
+            $pointer = $pointer->{"*"};
+            $pointer->{"<PARAM_NAME>"} = $param_name;
+        }
+        else {
+            $pointer->{$segment} = {};
+            $pointer = $pointer->{$segment};
+        }
+    }
+
+    die "Route already exists: $method - $path" if defined $pointer->{"<$method>"};
+    $pointer->{"<$method>"} = $sub;
+
+    # $self->{routes}{$path}{$method} = $sub;
+}
+
+sub _find_route {
+    my ($self, $request) = @_;
+    my ($method, $path) = ($request->method, $request->path);
+
+    $path =~ s/^\///;
+    $path =~ s/\/$//;
+    my @path_segments = split /\//, $path;
+
+    my $pointer = $self->{routes};
+     for my $segment (@path_segments) {
+        unless (defined $pointer->{$segment}) {
+            return undef unless defined $pointer->{"*"};
+
+            $pointer = $pointer->{"*"};
+            $request->{route_parameters}{$pointer->{"<PARAM_NAME>"}} = $segment;
+        }
+        else {
+            $pointer = $pointer->{$segment};
+        }
+    }
+
+    return undef unless defined $pointer->{"<$method>"};
+    return $pointer->{"<$method>"};
 }
 
 sub register_db {
@@ -52,7 +101,7 @@ sub to_psgi {
         my $env = shift;
         my $request = SubPar::Request->new($env);
 
-        my $handler = $self->{routes}{$request->path}{$request->method};
+        my $handler = $self->_find_route($request);
         if(defined $handler) {
             my $response = $handler->($request);
 

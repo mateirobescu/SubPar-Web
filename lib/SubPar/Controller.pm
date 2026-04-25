@@ -18,7 +18,7 @@ sub repositories {}
 
 sub add_route {
     my ($self, $method, $path, $handler) = @_;
-    $self->{server}->_register_method($method, $path, sub {
+    $self->{server}->_register_route($method, $path, sub {
         my ($request) = @_;
         return $self->$handler($request);
     });
