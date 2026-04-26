@@ -93,3 +93,111 @@ sub header {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+SubPar::Request - Represents an incoming HTTP request
+
+=head1 SYNOPSIS
+
+    sub handler {
+        my ($self, $req) = @_;
+
+        my $method  = $req->method;
+        my $path    = $req->path;
+        my $body    = $req->body;
+        my $name    = $req->query('name');
+        my $session = $req->cookie('session');
+        my $token   = $req->header('Authorization');
+        my $id      = $req->route_params('id');
+        my $rest    = $req->remaining_path;
+    }
+
+=head1 DESCRIPTION
+
+SubPar::Request wraps the PSGI environment hashref and provides a clean
+API for accessing all parts of an incoming HTTP request. Query parameters
+and cookies are parsed lazily on first access.
+
+=head1 METHODS
+
+=head2 method
+
+    my $method = $req->method;
+
+Returns the HTTP method e.g. C<GET>, C<POST>, C<PUT>, C<DELETE>.
+
+=head2 path
+
+    my $path = $req->path;
+
+Returns the request path e.g. C</users/123>.
+
+=head2 body
+
+    my $body = $req->body;
+
+Returns the decoded request body. JSON and form-encoded bodies are
+automatically decoded into a hashref. Returns an empty string for
+requests with no body.
+
+=head2 query
+
+    my $name = $req->query('name');
+    my $all  = $req->query;
+
+Returns a query parameter by name, or all query parameters as a hashref.
+Values are URL decoded automatically.
+
+=head2 cookie
+
+    my $session = $req->cookie('session');
+    my $all     = $req->cookie;
+
+Returns a cookie value by name, or all cookies as a hashref.
+Values are URL decoded automatically.
+
+=head2 header
+
+    my $token = $req->header('Authorization');
+    my $type  = $req->header('Content-Type');
+
+Returns a request header by name. The name is case insensitive and
+dashes are converted to underscores automatically.
+
+=head2 route_params
+
+    my $id   = $req->route_params('id');
+    my $name = $req->route_params('name');
+    my $all  = $req->route_params;
+
+Returns a dynamic route parameter by name, or all route parameters
+as a hashref. Parameters are defined in the route path with C<:name>
+syntax e.g. C</users/:id>.
+
+=head2 remaining_path
+
+    my $path = $req->remaining_path;
+
+Returns the remaining path captured by a C<**> catch-all wildcard.
+For example a route C</files/**> matching C</files/a/b/c> would
+return C<a/b/c>.
+
+=head2 env
+
+    my $env = $req->env;
+
+Returns the raw PSGI environment hashref. Use this to access any
+PSGI variables not exposed by the other methods.
+
+=head1 AUTHOR
+
+Matei-Gabriel Robescu
+
+=head1 LICENSE
+
+MIT
+
+=cut
