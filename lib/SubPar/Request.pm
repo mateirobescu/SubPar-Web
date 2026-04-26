@@ -21,6 +21,7 @@ sub new {
         path => $env->{PATH_INFO},
         body => $body,
         query_keys => undef, # lazy parsing
+        route_params => {}, # retrieved and updated here when parsing the route
         cookies => undef, # lazy parsing
 
     }, $class;
@@ -38,7 +39,7 @@ sub query {
     my ($self, $key) = @_;
 
     $self->{query_keys} //= _parse_query($self->{env});
-    return $self->{query_keys}{$key};
+    return $key ? $self->{query_keys}{$key} : { %{$self->{query_keys}} };
 }
 
 sub _parse_query {
@@ -57,7 +58,18 @@ sub cookies {
     my ($self, $key) = @_;
 
     $self->{cookies} //= _parse_cookies($self->{env});
-    return $self->{cookies}{$key};
+    return $key ? $self->{cookies}{$key} : { %{$self->{cookies}} };
+}
+
+sub route_params {
+    my ($self, $key) = @_;
+
+    return $key ? $self->{route_params}{$key} : { %{$self->{route_params}} };
+}
+
+sub remaining_path {
+    my ($self) = @_;
+    return $self->route_params("<PATH>");
 }
 
 sub _parse_cookies {
@@ -72,7 +84,7 @@ sub _parse_cookies {
     return $cookie_keys;
 }
 
-sub headers {
+sub header {
     my ($self, $name) = @_;
     $name = uc $name;
     $name =~ s/-/_/g;

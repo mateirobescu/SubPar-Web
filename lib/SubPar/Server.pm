@@ -30,10 +30,20 @@ sub _register_route {
     for my $segment (@path_segments) {
         if(substr($segment, 0, 1) eq ":") {
             my $param_name = substr($segment, 1);
-            die "Another similar dynamic route already exists: $method - $path" if $pointer->{"*"}{"<PARAM_NAME>"} eq $param_name;
+            if (exists $pointer->{"*"} && $pointer->{"*"}{"<PARAM_NAME>"} ne $param_name) {
+                die "Ambiguous dynamic route: $method - $path";
+            }
 
+            $pointer->{"*"} = {};
             $pointer = $pointer->{"*"};
             $pointer->{"<PARAM_NAME>"} = $param_name;
+        }
+        elsif($segment eq "**") {
+            die "** caputre all wildcard must be at the end of the path: $method - $path" unless $path =~ /\*\*$/;
+
+            $pointer->{"**"} = {};
+            $pointer = $pointer->{"**"};
+            $pointer->{"<CAPTURE_ALL>"} = 1;
         }
         else {
             $pointer->{$segment} = {};
@@ -43,8 +53,6 @@ sub _register_route {
 
     die "Route already exists: $method - $path" if defined $pointer->{"<$method>"};
     $pointer->{"<$method>"} = $sub;
-
-    # $self->{routes}{$path}{$method} = $sub;
 }
 
 sub _find_route {
@@ -56,19 +64,29 @@ sub _find_route {
     my @path_segments = split /\//, $path;
 
     my $pointer = $self->{routes};
-     for my $segment (@path_segments) {
-        unless (defined $pointer->{$segment}) {
-            return undef unless defined $pointer->{"*"};
+    while(@path_segments > 0) {
+        my $segment = shift @path_segments;
 
+        if(exists $pointer->{$segment}) {
+            $pointer = $pointer->{$segment};
+            next;
+        }
+
+        if( exists $pointer->{"*"}) {
             $pointer = $pointer->{"*"};
             $request->{route_parameters}{$pointer->{"<PARAM_NAME>"}} = $segment;
+            next;
         }
-        else {
-            $pointer = $pointer->{$segment};
-        }
+
+        return undef unless exists $pointer->{"**"};
+        $pointer = $pointer->{"**"};
+        unshift @path_segments, $segment;
+        $request->{route_parameters}{"<PATH>"} = join "/", @path_segments;
+        @path_segments = () # captured the remaining path
+
     }
 
-    return undef unless defined $pointer->{"<$method>"};
+    return undef unless exists $pointer->{"<$method>"};
     return $pointer->{"<$method>"};
 }
 
