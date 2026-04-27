@@ -86,14 +86,14 @@ sub _find_route {
 
         if( exists $pointer->{"*"}) {
             $pointer = $pointer->{"*"};
-            $request->{route_parameters}{$pointer->{"<PARAM_NAME>"}} = $segment;
+            $request->{route_params}{$pointer->{"<PARAM_NAME>"}} = $segment;
             next;
         }
 
         return undef unless exists $pointer->{"**"};
         $pointer = $pointer->{"**"};
         unshift @path_segments, $segment;
-        $request->{route_parameters}{"<PATH>"} = join "/", @path_segments;
+        $request->{route_params}{"<PATH>"} = join "/", @path_segments;
         @path_segments = () # captured the remaining path
 
     }
