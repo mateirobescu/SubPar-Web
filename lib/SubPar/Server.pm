@@ -17,7 +17,19 @@ sub new {
     return bless { routes => {}, dbs => {} }, $class;
 }
 
-use Data::Dumper;
+sub register_controllers {
+    my ($self) = @_;
+
+    for my $file (glob "./Controller/*.pm") {
+        (my $package = $file) =~ s/^\.\///;
+        $package =~ s/^Controller\///;
+        $package =~ s/\.pm$//;
+        $package =~ s/\//::/g;
+
+        require $file;
+        $package->register($self);
+    }
+}
 
 sub _register_route {
     my ($self, $method, $path, $sub) = @_;

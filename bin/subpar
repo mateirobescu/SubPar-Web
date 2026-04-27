@@ -3,13 +3,17 @@ use strict;
 use warnings;
 
 my $command = shift @ARGV // '';
-my $arg = shift @ARGV;
+my @args = @ARGV;
+my @created_files = ();
 
 if($command eq 'create-project') {
-    create_project();
+    create_project(@args);
+}
+elsif($command eq 'generate') {
+    generate(@args);
 }
 elsif($command eq 'runserver') {
-    runserver($arg);
+    runserver(@args);
 } 
 else {
     print "Usage: subpar <command> [args]\n";
@@ -19,54 +23,114 @@ else {
 
 
 sub create_project  {
-    mkdir "app" or die "Cannot create directory: $!";
-    print "  created app/\n";
-    mkdir "app/Controller" or die "Cannot create directory: $!";
-    print "  created app/Controller/\n";
-    mkdir "app/Repository" or die "Cannot create directory: $!";
-    print "  created app/Repository/\n";
-    mkdir "app/Model" or die "Cannot create directory: $!";
-    print "  created app/Model/\n";
+    my ($path) = @_;
 
+    $path //= ".";
 
-    my $fh;
-    open $fh, ">", "app.psgi" or die "Cannot create file: $!";
-    print "  created app.psgi\n";
+    eval {
+        create_file("$path/app.psgi", app_psgi_template());
+        mkdir "$path/Controller" or die "./Controller: cannot create directory: $!";
+        mkdir "$path/Model" or die "./Model: cannot create directory: $!";
+        mkdir "$path/Repository" or die "./Repository: cannot create directory: $!";
+    };
 
-    print $fh <<END;
+    cleanup_if_err();
+
+    print "\nDone! Now create an app:\n";
+    print "  subpar generate <controller|model|repository|all> <name> \n";
+}
+
+sub generate {
+    my ($option, $name) = @_;
+
+    die "Choose a generation mode please [controller|model|repository|all]" unless defined $option;
+    die "You need to choose a name for the generation!" unless defined $name;
+
+    $option = lc $option;
+
+    eval {
+        if($option eq 'all') {
+            generate_all($name);
+        }
+        elsif($option eq 'controller') {
+            generate_controller($name);
+        }
+        elsif($option eq 'model') {
+            generate_model($name);
+        }
+        elsif($option eq 'repository') {
+            generate_repository($name);
+        }
+        else {
+            die "This is not a valid option!"
+        }
+    };
+
+    cleanup_if_err();
+}
+
+sub generate_controller {
+    my ($name) = @_;
+
+    create_file("./Controller/" . $name . "Controller.pm", controller_template($name));
+}
+
+sub generate_model {
+    my ($name) = @_;
+
+    create_file("./Model/" . $name . ".pm", model_template($name));
+}
+
+sub generate_repository {
+    my ($name) = @_;
+
+    create_file("./Repository/" . $name . "Repository.pm", repository_template($name));
+}
+
+sub generate_all {
+    my ($name) = @_;
+
+    generate_controller($name);
+    generate_model($name);
+    generate_repository($name);
+}
+
+sub create_file {
+    my ($path, $template) = @_;
+
+    if(-e $path) {
+        die $path . ": file already exists!";
+    }
+
+    open my $fh, '>', $path or die $path . ": file could not be open!";
+    print $fh $template;
+    close $fh;
+
+    push @created_files, $path;
+
+    print "Created $path\n";
+}
+
+sub app_psgi_template {
+    <<END;
 use strict;
 use warnings;
 
 use SubPar::Server;
-# If your IDE cannot find modules, add ./app to your include paths.
-use Controller::ExampleController;
 
 my \$server = SubPar::Server->new();
-
-# Register databases here.
-# \$server->register_db("main", {
-#     driver => "MariaDB",
-#     database_name => "subpar",
-#     hostname => "localhost",
-#     port => "3306",
-#     username => "admin",
-#     password => "password",
-# })
-
-# Register controllers here.
-Controller::ExampleController->register(\$server);
+\$server->register_controllers();
 
 my \$app = \$server->to_psgi;
-
 END
+}
 
-    close $fh;
+sub controller_template {
+    my ($name) = @_;
+    $name = $name . "Controller";
 
-    open $fh, '>', 'app/Controller/ExampleController.pm' or die "Cannot create file: $!";
-    print "  created app/Controller/ExampleController.pm\n";
-
-print $fh <<END;
-package Controller::ExampleController;
+    <<END;
+package $name;
 
 use strict;
 use warnings;
@@ -76,31 +140,23 @@ use parent 'SubPar::Controller';
 # Inject your repositories here.
 sub repositories {
     my (\$self) = \@_;
-    # \$self->{repositories}{Example} = Repository::ExampleRepository->new(\$self->{server}->get_db("main"));
 }
 
 # Setup your routes here.
 sub routes {
     my (\$self) = \@_;
-
-    \$self->get("/", \\&index);
-}
-
-sub index {
-    my (\$self, \$request) = \@_;
-    return { message => "Welcome to SubPar!" };
 }
 
 1;
-
 END
-    close $fh;
+}
 
-    open $fh, '>', "app/Model/Example.pm" or die "Cannot create file: $!";
-    print "  created app/Model/Example.pm\n";
+sub model_template {
+    my ($name) = @_;
+    $name = $name . "Model";
 
-    print $fh <<END;
-package Model::Example;
+    <<END;
+package $name;
 
 use strict;
 use warnings;
@@ -110,20 +166,19 @@ use parent 'SubPar::Model';
 # Declare model fields here. Must match physical database column names.
 sub fields {
     return {
-        id   => { pk => 1, auto => 1, required => 1 },
-        name => { required => 1 },
     };
 }
 
 1;
 END
-    close $fh;
+}
 
-    open $fh, '>', "app/Repository/ExampleRepository.pm" or die "Cannot create file: $!";    
-    print "  created app/Repository/ExampleRepository.pm\n";
+sub repository_template {
+    my ($name) = @_;
+    $name = $name . "Repository";
 
-    print $fh <<END;
-package Repository::ExampleRepository;
+    <<END;
+package Repository::$name;
 
 use strict;
 use warnings;
@@ -131,15 +186,23 @@ use warnings;
 use parent 'SubPar::Repository';
 
 # Declare table name here. Must match physical database table name.
-sub table { 'example' }
+sub table { '$name' }
 
 1;
 END
-    close $fh;
+}
 
-    print "\nDone! Get started:\n";
-    print "  subpar runserver\n";
+sub cleanup_if_err {
 
+    if ($@) {
+        my $err = $@;
+        $err =~ s/\n$//;
+
+        unlink $_ for @created_files;
+        print "Error: $err\n";
+        print "All created files have been reverted\n" if @created_files;
+        exit 1;
+    }
 }
 
 sub runserver  {
@@ -147,5 +210,5 @@ sub runserver  {
     $port //= 8080;
     print "Starting SubPar server on port $port...\n";
     print "Press Ctrl+C to stop.\n\n";
-    exec "starman -I ./app --port $port app.psgi";
+    exec "starman -I . --port $port app.psgi";
 }

@@ -17,8 +17,6 @@ sub new {
 
     return bless {
         env => $env,
-        method => $env->{REQUEST_METHOD},
-        path => $env->{PATH_INFO},
         body => $body,
         query_keys => undef, # lazy parsing
         route_params => {}, # retrieved and updated here when parsing the route
@@ -27,9 +25,9 @@ sub new {
     }, $class;
 }
 
-sub method { $_[0]->{method} }
+sub method { $_[0]->{env}{REQUEST_METHOD} }
 
-sub path { $_[0]->{path} }
+sub path { $_[0]->{env}{PATH_INFO} }
 
 sub body { $_[0]->{body} }
 
