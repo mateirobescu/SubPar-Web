@@ -29,6 +29,7 @@ sub create_project  {
 
     eval {
         create_file("$path/app.psgi", app_psgi_template());
+        create_file("$path/settings.pl", settings_template());
         mkdir "$path/Controller" or die "./Controller: cannot create directory: $!";
         mkdir "$path/Model" or die "./Model: cannot create directory: $!";
         mkdir "$path/Repository" or die "./Repository: cannot create directory: $!";
@@ -122,6 +123,25 @@ my \$server = SubPar::Server->new();
 \$server->register_controllers();
 
 my \$app = \$server->to_psgi;
+END
+}
+
+sub settings_template {
+    <<END;
+{
+    port => 8080,
+
+    databases => {
+        main => {
+            driver        => 'yourDriver',
+            database_name => 'yourDbName',
+            hostname      => 'yourHostname',
+            port          => 'yourPort',
+            username      => 'yourUsername',
+            password      => 'yourPassword',
+        }
+    },
+}
 END
 }
 

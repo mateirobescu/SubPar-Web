@@ -22,6 +22,7 @@ WriteMakefile(
         'JSON::PP'         => 0,
         'Starman'          => 0,
         'DBI'              => 0,
+        'DBIx::Connector'  => 0,
         'URI'              => 0,
     },
 );

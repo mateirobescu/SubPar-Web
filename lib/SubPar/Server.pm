@@ -6,6 +6,7 @@ use warnings;
 use JSON::PP;
 use Data::Dumper;
 use DBI;
+use DBIx::Connector;
 
 use SubPar::ContentType;
 use SubPar::Response;
@@ -102,7 +103,12 @@ sub _find_route {
     return $pointer->{"<$method>"};
 }
 
-sub register_db {
+sub load_dbs {
+    my ($self) = @_;
+
+}
+
+sub _register_db {
     my ($self, $name, $args) = @_;
 
     if (exists $self->{dbs}{$name}) {
@@ -110,7 +116,7 @@ sub register_db {
     }
 
     my $data_source = "dbi:$args->{driver}:database=$args->{database_name};host=$args->{hostname};port=$args->{port}";    
-    $self->{dbs}{$name} = DBI->connect($data_source, $args->{username}, $args->{password});
+    $self->{dbs}{$name} = DBIx::Connector->new($data_source, $args->{username}, $args->{password}, { RaiseError => 1, AutoCommit => 1 });
 }
 
 sub get_db {
