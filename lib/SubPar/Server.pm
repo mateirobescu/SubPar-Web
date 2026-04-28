@@ -15,15 +15,14 @@ use SubPar::Request;
 sub new {
     my ($class, $self) = @_;
     
-    return bless { routes => {}, dbs => {} }, $class;
+    return bless { routes => {}, databases => {} }, $class;
 }
 
-sub register_controllers {
+sub load_controllers {
     my ($self) = @_;
 
     for my $file (glob "./Controller/*.pm") {
         (my $package = $file) =~ s/^\.\///;
-        $package =~ s/^Controller\///;
         $package =~ s/\.pm$//;
         $package =~ s/\//::/g;
 
@@ -47,19 +46,19 @@ sub _register_route {
                 die "Ambiguous dynamic route: $method - $path";
             }
 
-            $pointer->{"*"} = {};
+            $pointer->{"*"} = {} unless exists $pointer->{"*"};
             $pointer = $pointer->{"*"};
             $pointer->{"<PARAM_NAME>"} = $param_name;
         }
         elsif($segment eq "**") {
             die "** caputre all wildcard must be at the end of the path: $method - $path" unless $path =~ /\*\*$/;
 
-            $pointer->{"**"} = {};
+            $pointer->{"**"} = {} unless exists $pointer->{"**"};
             $pointer = $pointer->{"**"};
             $pointer->{"<CAPTURE_ALL>"} = 1;
         }
         else {
-            $pointer->{$segment} = {};
+            $pointer->{$segment} = {} unless exists $pointer->{$segment};
             $pointer = $pointer->{$segment};
         }
     }
@@ -104,30 +103,33 @@ sub _find_route {
 }
 
 sub load_dbs {
-    my ($self) = @_;
+    my ($self, $db_configs) = @_;
 
+    for my $db_name (keys %$db_configs) {
+        $self->_register_db($db_name, $db_configs->{$db_name});
+    }
 }
 
 sub _register_db {
     my ($self, $name, $args) = @_;
 
-    if (exists $self->{dbs}{$name}) {
+    if (exists $self->{databases}{$name}) {
         die "A database with the same name is already registered: $name";
     }
 
     my $data_source = "dbi:$args->{driver}:database=$args->{database_name};host=$args->{hostname};port=$args->{port}";    
-    $self->{dbs}{$name} = DBIx::Connector->new($data_source, $args->{username}, $args->{password}, { RaiseError => 1, AutoCommit => 1 });
+    $self->{databases}{$name} = DBIx::Connector->new($data_source, $args->{username}, $args->{password}, { RaiseError => 1, AutoCommit => 1 });
 }
 
 sub get_db {
     my ($self, $name) = @_;
     $name //= "main";
 
-    unless (exists $self->{dbs}{$name}) {
+    unless (exists $self->{databases}{$name}) {
         die "A database with that name isn't registered: $name";
     }
 
-    return $self->{dbs}{$name};
+    return $self->{databases}{$name};
 }
 
 sub to_psgi {

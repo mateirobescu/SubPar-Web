@@ -12,7 +12,7 @@ sub new {
 sub save {
     my ($self, $model) = @_;
 
-    my $model_fields = $model->get_hashref();
+    my $model_fields = $model->to_hashref();
 
     my @field_names = keys %$model_fields;
     my @field_values = @$model_fields{@field_names};
@@ -21,11 +21,19 @@ sub save {
     my $nr_of_fields = @field_names;
     my $placeholders = join ", ", (('?')) x $nr_of_fields;
 
-    $self->{dbh}->prepare(
-        "INSERT INTO " . $self->table . " ($field_names_str) VALUES ($placeholders)"
-    )->execute(
-        @field_values
-    );
+    my $result = $self->get_db->run( sub {
+        my $sth = $_->prepare("INSERT INTO " . $self->table . " ($field_names_str) VALUES ($placeholders)");
+
+        return $sth->execute(@field_values);
+    });
+
+    return $result;
+}
+
+sub get_db {
+    my ($self) = @_;
+
+    return $self->{dbh};
 }
 
 sub table {

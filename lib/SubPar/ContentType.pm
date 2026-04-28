@@ -18,7 +18,8 @@ sub encode {
     my ($content_type, $data) = @_;
     
     if ($content_type eq CT_JSON) {
-        return encode_json($data);
+        my $json = JSON::PP->new->convert_blessed(1);
+        return $json->encode($data);
     }
     
     if ($content_type eq CT_HTML) {

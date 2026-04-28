@@ -119,8 +119,11 @@ use warnings;
 
 use SubPar::Server;
 
+my \$settings = do "./settings.pl";
+
 my \$server = SubPar::Server->new();
-\$server->register_controllers();
+\$server->load_dbs(\$settings->{databases});
+\$server->load_controllers();
 
 my \$app = \$server->to_psgi;
 END
@@ -128,6 +131,9 @@ END
 
 sub settings_template {
     <<END;
+use strict;
+use warnings;
+
 {
     port => 8080,
 
@@ -147,10 +153,8 @@ END
 
 sub controller_template {
     my ($name) = @_;
-    $name = $name . "Controller";
-
     <<END;
-package $name;
+package Controller::$name;
 
 use strict;
 use warnings;
@@ -173,10 +177,9 @@ END
 
 sub model_template {
     my ($name) = @_;
-    $name = $name . "Model";
 
     <<END;
-package $name;
+package Model::$name;
 
 use strict;
 use warnings;
@@ -195,8 +198,6 @@ END
 
 sub repository_template {
     my ($name) = @_;
-    $name = $name . "Repository";
-
     <<END;
 package Repository::$name;
 

@@ -16,12 +16,45 @@ sub routes {}
 
 sub repositories {}
 
+sub add_repo {
+    my ($self, $repo_name, $repo) = @_;
+
+    if(exists $self->{repositories}{$repo_name}){
+        die "$repo_name: a repository with this name already exists!";
+    }
+
+    $self->{repositories}{$repo_name} = $repo;
+}
+
+sub get_repo {
+    my ($self, $repo_name) = @_;
+
+    unless(exists $self->{repositories}{$repo_name}){
+        die "$repo_name: a repository with this name doesn't exist!";
+    }
+
+    return $self->{repositories}{$repo_name};
+}
+
+
 sub add_route {
     my ($self, $method, $path, $handler) = @_;
     $self->{server}->_register_route($method, $path, sub {
         my ($request) = @_;
         return $self->$handler($request);
     });
+}
+
+sub server {
+    my ($self) = @_;
+
+    return $self->{server};
+}
+
+sub get_db {
+    my ($self, $name) = @_;
+
+    return $self->server->get_db($name);
 }
 
 sub get {
