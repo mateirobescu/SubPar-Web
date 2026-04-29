@@ -30,6 +30,9 @@ sub create_project  {
     eval {
         create_file("$path/app.psgi", app_psgi_template());
         create_file("$path/settings.pl", settings_template());
+        create_file("$path/.gitignore", gitignore_template());
+        create_file("$path/README.md", readme_template());
+        create_file("$path/cpanfile", cpanfile_template());
         mkdir "$path/Controller" or die "./Controller: cannot create directory: $!";
         mkdir "$path/Model" or die "./Model: cannot create directory: $!";
         mkdir "$path/Repository" or die "./Repository: cannot create directory: $!";
@@ -148,6 +151,81 @@ use warnings;
         }
     },
 }
+END
+}
+
+sub gitignore_template {
+    <<'END';
+# Build artifacts
+blib/
+Makefile
+MYMETA.*
+pm_to_blib
+*.tar.gz
+*.bak
+
+# Perl
+*.pbc
+*.pmc
+cover_db/
+nytprof/
+nytprof.out
+cpanfile.snapshot
+
+# Environment
+.env
+*.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+log/
+*.log
+END
+}
+
+sub readme_template {
+    <<END;
+
+#A SubPar::Web application.
+
+## Getting Started
+
+Install dependencies:
+
+    cpanm --installdeps .
+
+Start the server:
+
+    subpar runserver
+
+## Structure
+
+    Controller/    # HTTP request handlers
+    Model/         # Data models
+    Repository/    # Database access
+    app.psgi       # Entry point
+    settings.pl    # Configuration
+
+## License
+
+MIT
+END
+}
+
+sub cpanfile_template {
+    <<'END';
+# SubPar::Web - install from https://github.com/mateirobescu/SubPar-Web
+# curl -fsSL https://raw.githubusercontent.com/mateirobescu/SubPar-Web/install.sh | bash
+
+# add your app dependencies here:
+# requires 'Some::Module';
 END
 }
 
