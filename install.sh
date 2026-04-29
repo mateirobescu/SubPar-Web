@@ -22,7 +22,7 @@ for dep in "${dependencies[@]}"; do
 done
 
 echo "Cloning SubPar-Web..."
-git clone -b dev https://github.com/mateirobescu/SubPar-Web.git
+git clone https://github.com/mateirobescu/SubPar-Web.git
 
 cd SubPar-Web/
 
