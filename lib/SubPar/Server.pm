@@ -160,3 +160,115 @@ sub to_psgi {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+SubPar::Server - Core HTTP server and router for SubPar::Web
+
+=head1 SYNOPSIS
+
+    use SubPar::Server;
+
+    my $settings = do './settings.pl';
+
+    my $server = SubPar::Server->new();
+    $server->load_dbs($settings->{databases});
+    $server->load_controllers();
+
+    my $app = $server->to_psgi;
+
+=head1 DESCRIPTION
+
+SubPar::Server handles route registration, request dispatching and
+database connection management. It is PSGI compatible and designed
+to run behind Starman.
+
+Handlers can return either a plain hashref (automatically wrapped
+in a 200 JSON response) or a C<SubPar::Response> object for full
+control over status code, headers and content type.
+
+=head1 METHODS
+
+=head2 new
+
+    my $server = SubPar::Server->new();
+
+Creates a new server instance with empty routes and databases.
+
+=head2 load_controllers
+
+    $server->load_controllers();
+
+Auto-discovers and loads all C<.pm> files in the C<./Controller/>
+directory. Each controller's C<register> method is called
+automatically.
+
+=head2 load_dbs
+
+    $server->load_dbs($settings->{databases});
+
+Registers all database connections from a hashref of database
+configurations. Each key is the database name, each value is a
+hashref with the following keys:
+
+=over 4
+
+=item C<driver> — DBI driver e.g. C<mysql>, C<Pg>, C<SQLite>
+
+=item C<database_name> — database name
+
+=item C<hostname> — database host
+
+=item C<port> — database port
+
+=item C<username> — database username
+
+=item C<password> — database password
+
+=back
+
+=head2 get_db
+
+    my $dbh = $server->get_db("main");
+    my $dbh = $server->get_db;  # defaults to "main"
+
+Returns a C<DBIx::Connector> handle for the named database.
+Dies if the database was not registered.
+
+=head2 to_psgi
+
+    my $app = $server->to_psgi;
+
+Returns a PSGI-compatible coderef. Pass this to Starman:
+
+    starman --port 8080 app.psgi
+
+Handlers returning a plain hashref are automatically wrapped in a
+C<200 OK> JSON response. Handlers returning a C<SubPar::Response>
+object are passed through as-is. Unknown routes return C<404>.
+
+=head2 Routing
+
+Routes are registered via C<SubPar::Controller>. The router supports:
+
+=over 4
+
+=item Static segments — C</users/profile>
+
+=item Dynamic segments — C</users/:id> accessible via C<$req-E<gt>route_params('id')>
+
+=item Catch-all wildcard — C</files/**> accessible via C<$req-E<gt>remaining_path>
+
+=back
+
+=head1 AUTHOR
+
+Matei-Gabriel Robescu
+
+=head1 LICENSE
+
+MIT
+
+=cut
