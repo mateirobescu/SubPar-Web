@@ -40,6 +40,7 @@ subpar runserver [port]             # start the server (default: 8080)
 
 ## Project Structure
 
+```
 myapp/
 ├── app.psgi          # entry point
 ├── settings.pl       # configuration
@@ -47,6 +48,7 @@ myapp/
 ├── Controller/       # HTTP handlers
 ├── Model/            # data models
 └── Repository/       # database access
+```
 
 ## Configuration
 
