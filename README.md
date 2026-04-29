@@ -7,7 +7,7 @@ Feel free to criticize me!
 ## Installation
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mateirobescu/SubPar-Web/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/mateirobescu/SubPar-Web/main/install.sh | bash
 ```
 
 Then reload your shell:
