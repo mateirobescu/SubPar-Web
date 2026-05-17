@@ -266,8 +266,8 @@ use parent 'SubPar::Model';
 
 # Declare model fields here. Must match physical database column names.
 sub fields {
-    return {
-    };
+    return [
+    ];
 }
 
 1;
